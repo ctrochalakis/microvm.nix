@@ -18,10 +18,12 @@ let
     aarch64-linux = "${kernel.out}/${pkgs.stdenv.hostPlatform.linux-kernel.target}";
   }.${system};
 
+  # --gpu="context-types=cross-domain:virgl2,displays=[[hidden=true]]" \
   gpuParams = {
-    context-types = "virgl:virgl2:cross-domain";
-    egl = true;
-    vulkan = true;
+    context-types = "cross-domain:virgl2";
+    displays = "[[hidden=true]]";
+    # egl = true;
+    # vulkan = true;
   };
 
 in {
@@ -32,16 +34,6 @@ in {
     ${lib.optionalString (pivotRoot != null) ''
       mkdir -p ${pivotRoot}
     ''}
-  '' + lib.optionalString graphics.enable ''
-    rm -f ${graphics.socket}
-    ${pkgs.crosvm}/bin/crosvm device gpu \
-      --socket ${graphics.socket} \
-      --wayland-sock $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY\
-      --params '${builtins.toJSON gpuParams}' \
-      &
-    while ! [ -S ${graphics.socket} ]; do
-      sleep .1
-    done
   '';
 
   command =
@@ -71,7 +63,8 @@ in {
       ]
       ++
       lib.optionals graphics.enable [
-        "--vhost-user" "gpu,socket=${graphics.socket}"
+        "--gpu=\"context-types=cross-domain:virgl2,displays=[[hidden=true]]\""
+        "--wayland-sock $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
       ]
       ++
       lib.optionals (builtins.compareVersions pkgs.crosvm.version "107.1" < 0) [
