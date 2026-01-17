@@ -668,6 +668,12 @@ in
       description = "A Hypervisor's sandbox directory";
     };
 
+    crosvm.package = mkOption {
+      type = types.package;
+      default = pkgs.crosvm;
+      description = "The crosvm package to use.";
+    };
+
     firecracker.cpu = mkOption {
       type = with types; nullOr attrs;
       default = null;

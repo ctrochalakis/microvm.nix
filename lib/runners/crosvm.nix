@@ -11,7 +11,7 @@ let
     vcpu mem balloon initialBalloonMem hotplugMem hotpluggedMem user volumes shares
     socket devices vsock graphics credentialFiles
     kernel initrdPath storeDisk storeOnDisk;
-  inherit (microvmConfig.crosvm) pivotRoot extraArgs;
+  inherit (microvmConfig.crosvm) pivotRoot extraArgs package;
 
   kernelPath = {
     x86_64-linux = "${kernel.dev}/vmlinux";
@@ -49,7 +49,7 @@ in {
     then throw "crosvm does not support credentialFiles"
     else lib.escapeShellArgs (
       [
-        "${pkgs.crosvm}/bin/crosvm" "run"
+        "${package}/bin/crosvm" "run"
         "-m" (toString mem)
         "-c" (toString vcpu)
         "--serial" "type=stdout,console=true,stdin=true"
@@ -67,7 +67,7 @@ in {
         "--wayland-sock $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
       ]
       ++
-      lib.optionals (builtins.compareVersions pkgs.crosvm.version "107.1" < 0) [
+      lib.optionals (builtins.compareVersions package.version "107.1" < 0) [
         # workarounds
         "--seccomp-log-failures"
       ]
@@ -144,7 +144,7 @@ in {
   shutdownCommand =
     if socket != null
     then ''
-        ${pkgs.crosvm}/bin/crosvm powerbtn ${socket}
+        ${package}/bin/crosvm powerbtn ${socket}
       ''
     else throw "Cannot shutdown without socket";
 
@@ -152,8 +152,8 @@ in {
     if socket != null
     then ''
       VALUE=$(( $SIZE * 1024 * 1024 ))
-      ${pkgs.crosvm}/bin/crosvm balloon $VALUE ${socket}
-      SIZE=$( ${pkgs.crosvm}/bin/crosvm balloon_stats ${socket} | \
+      ${package}/bin/crosvm balloon $VALUE ${socket}
+      SIZE=$( ${package}/bin/crosvm balloon_stats ${socket} | \
         ${pkgs.jq}/bin/jq -r .BalloonStats.balloon_actual \
       )
       echo $(( $SIZE / 1024 / 1024 ))
