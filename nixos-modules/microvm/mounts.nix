@@ -9,7 +9,7 @@ let
 
   hostStore = builtins.head (
     builtins.filter ({ source, ... }:
-      source == "/nix/store"
+      source == config.microvm.hostStore
     ) config.microvm.shares
   );
 
@@ -124,7 +124,7 @@ lib.mkIf config.microvm.guest.enable {
           "virtiofs" = [ "defaults" "x-systemd.after=systemd-modules-load.service" ];
           "9p" = [ "trans=virtio" "version=9p2000.L" "msize=65536" "x-systemd.after=systemd-modules-load.service" ];
         }.${proto};
-      } // lib.optionalAttrs (source == "/nix/store" || mountPoint == config.microvm.writableStoreOverlay) {
+      } // lib.optionalAttrs (source == config.microvm.hostStore || mountPoint == config.microvm.writableStoreOverlay) {
         neededForBoot = true;
       };
     }) {} config.microvm.shares

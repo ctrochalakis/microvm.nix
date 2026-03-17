@@ -538,10 +538,16 @@ in
       description = "Includes boot.kernelParams but doesn't end up in toplevel, thereby allowing references to toplevel";
     };
 
+    hostStore = mkOption {
+      type = types.str;
+      default = "/nix/store";
+      description = "Path of the host's Nix store share (matched against microvm.shares[].source) to use as the guest's read-only store.";
+    };
+
     storeOnDisk = mkOption {
       type = types.bool;
       default = ! lib.any ({ source, ... }:
-        source == "/nix/store"
+        source == config.microvm.hostStore
       ) config.microvm.shares;
       description = "Whether to boot with the storeDisk, that is, unless the host's /nix/store is a microvm.share.";
     };
